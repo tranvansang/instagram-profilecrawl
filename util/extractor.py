@@ -194,7 +194,7 @@ def extract_post_info(browser):
         len(comments) - 1), date, user_commented_list, user_comments, mentions
 
 
-def extract_posts(browser, num_of_posts_to_do):
+def extract_posts(browser, num_of_posts_to_do, is_tag = False):
     """Get all posts from user"""
     links = []
     links2 = []
@@ -222,7 +222,12 @@ def extract_posts(browser, num_of_posts_to_do):
               " posts only, if you want to change this limit, change limit_amount value in crawl_profile.py\n")
         while (len(links2) < num_of_posts_to_do):
             links2 = []
-            prev_divs = browser.find_elements_by_tag_name('main')
+            if is_tag:
+                main = browser.find_element_by_tag_name('main')
+                article_children = main.find_elements_by_xpath('./article/*')
+                prev_divs = [article_children[3]]
+            else:
+                prev_divs = browser.find_elements_by_tag_name('main')
             links_elems = [div.find_elements_by_tag_name('a') for div in prev_divs]
             links = sum([[link_elem.get_attribute('href')
                           for link_elem in elems] for elems in links_elems], [])
@@ -240,7 +245,7 @@ def extract_posts(browser, num_of_posts_to_do):
                     print("links ", len(links2),"/",num_of_posts_to_do)
                     if (len(links2) < num_of_posts_to_do):
                         links2.append(link)
-            links2 = list(set(links2))
+            links2 = list(set(links2)) #remove duplicate elems
             print("Scrolling profile ", len(links2), "/", num_of_posts_to_scroll)
             body_elem.send_keys(Keys.END)
             sleep(Settings.sleep_time_between_post_scroll)
@@ -379,7 +384,7 @@ def extract_tag_information(browser, tag, limit_amount):
     user_commented_total_list = []
     if Settings.scrap_posts_infos is True:
         try:
-            post_infos, user_commented_total_list = extract_posts(browser, num_of_posts_to_do)
+            post_infos, user_commented_total_list = extract_posts(browser, num_of_posts_to_do, True)
         except:
             pass
 
