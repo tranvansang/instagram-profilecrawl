@@ -367,3 +367,45 @@ def extract_information(browser, username, limit_amount):
             last = user_commented_total_list[i]
 
     return information, user_commented_list
+
+
+def extract_tag_information(browser, tag, limit_amount):
+    """Get all the information for the given tag"""
+
+    tag_link = "https://www.instagram.com/explore/tags/{}/".format(tag)
+    web_adress_navigator(browser, tag_link)
+    num_of_posts_to_do = 12
+    post_infos = []
+    user_commented_total_list = []
+    if Settings.scrap_posts_infos is True:
+        try:
+            post_infos, user_commented_total_list = extract_posts(browser, num_of_posts_to_do)
+        except:
+            pass
+
+    information = {
+        'tag': tag,
+        'scrapped': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'posts': post_infos
+    }
+
+    print("\nTag ", tag, " has ", len(user_commented_total_list), " comments.")
+
+    # sorts the list by frequencies, so users who comment the most are at the top
+    import collections
+    from operator import itemgetter, attrgetter
+    counter = collections.Counter(user_commented_total_list)
+    com = sorted(counter.most_common(), key=itemgetter(1, 0), reverse=True)
+    com = map(lambda x: [x[0]] * x[1], com)
+    user_commented_total_list = [item for sublist in com for item in sublist]
+
+    # remove duplicates preserving order (that's why not using set())
+    user_commented_list = []
+    last = ''
+    for i in range(len(user_commented_total_list)):
+        if tag.lower() != user_commented_total_list[i]:
+            if last != user_commented_total_list[i]:
+                user_commented_list.append(user_commented_total_list[i])
+            last = user_commented_total_list[i]
+
+    return information, user_commented_list
