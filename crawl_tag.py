@@ -40,7 +40,8 @@ try:
 
 except KeyboardInterrupt:
   print('Aborted...')
-
+except:
+  pass
 finally:
   browser.delete_all_cookies()
   browser.close()
