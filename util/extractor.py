@@ -112,7 +112,7 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
             if is_tag:
                 main = browser.find_element_by_tag_name('main')
                 article_children = main.find_elements_by_xpath('./article/*')
-                prev_divs = [article_children[3]]
+                prev_divs = [article_children[2]]
             else:
                 prev_divs = browser.find_elements_by_tag_name('main')
             links_elems = [div.find_elements_by_tag_name('a') for div in prev_divs]
