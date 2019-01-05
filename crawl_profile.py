@@ -14,6 +14,7 @@ from selenium.webdriver.chrome.options import Options
 from util.cli_helper import get_all_user_names
 from util.extractor import extract_information
 
+
 chrome_options = Options()
 chrome_options.add_argument("--start-maximized")
 chrome_options.add_argument("--kiosk")

@@ -9,6 +9,17 @@ from util.settings import Settings
 from .util import web_adress_navigator
 import datetime
 
+from PIL import Image
+import urllib.request
+import ssl
+import io
+
+def getImageSize(url):
+    context = ssl._create_unverified_context()
+    with urllib.request.urlopen(url, context=context) as u:
+       f = io.BytesIO(u.read())
+       img = Image.open(f)
+    return img.size
 
 def get_user_info(browser):
     """Get the basic user info from the profile screen"""
@@ -66,11 +77,10 @@ def extract_post_info(browser):
         if ( className == 'FFVAD'):
             img = element.get_attribute('src')
             srcset = element.get_attribute('srcset')
-            width = element.get_attribute('sizes')
-            if (width != '' and width != None): width = width.replace('px', '').strip()
-            height = width
+            width, height = getImageSize(img)
+            sizes = element.get_attribute('sizes')
     
-    return img, srcset, width, height
+    return img, srcset, width, height, sizes
 
 
 def extract_posts(browser, num_of_posts_to_do, is_tag = False):
@@ -123,7 +133,6 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
                     preview_imgs[href] = src
             for link in links:
                 if "/p/" in link:
-                    print("links ", len(links2),"/",num_of_posts_to_do)
                     if (len(links2) < num_of_posts_to_do):
                         links2.append(link)
             links2 = list(set(links2)) #remove duplicate elems
@@ -160,7 +169,7 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
         print("\nScrapping link: ", link)
         web_adress_navigator(browser, link)
         try:
-            img, srcset, width, height = extract_post_info(browser)
+            img, srcset, width, height, sizes = extract_post_info(browser)
 
             post_infos.append({
                 'src': img,
@@ -168,6 +177,7 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
                 'width': width,
                 'height': height,
                 'url': link,
+                'sizes': sizes
             })
             msg = ''
             if (img == '' or img == None): msg = msg + "img is null,"
@@ -193,6 +203,7 @@ def extract_information(browser, username, limit_amount):
     post_infos = []
     user_commented_total_list = []
     num_of_posts_to_do = 12
+    errMsg = ''
     if Settings.scrap_posts_infos is True:
         try:
             post_infos, errMsg = extract_posts(browser, num_of_posts_to_do)
