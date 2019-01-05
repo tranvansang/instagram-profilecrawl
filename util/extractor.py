@@ -67,6 +67,7 @@ def extract_post_info(browser):
             img = element.get_attribute('src')
             srcset = element.get_attribute('srcset')
             width = element.get_attribute('sizes')
+            if (width != '' and width != None): width = width.replace('px', '').strip()
             height = width
     
     return img, srcset, width, height
