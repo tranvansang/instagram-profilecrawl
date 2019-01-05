@@ -39,7 +39,6 @@ try:
                                                      
     if (errMsg != '' and errMsg != None):
       #Send msg to slack
-      print('111')
       webhook_url = 'https://hooks.slack.com/services/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'
       slack_data = {'text': '#InstagramCrawl:\n' + errMsg}
 

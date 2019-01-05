@@ -9,10 +9,10 @@ class Datasaver:
     def save_profile_json(username, information):
         check_folder(Settings.profile_location)
         if (Settings.profile_file_with_timestamp):
-            file_profile = os.path.join(Settings.profile_location, 'carstay_' + datetime.datetime.now().strftime(
+            file_profile = os.path.join(Settings.profile_location, username + '_' + datetime.datetime.now().strftime(
                 "%Y-%m-%d %H-%M-%S") + '.json')
         else:
-            file_profile = os.path.join(Settings.profile_location, 'carstay.json')
+            file_profile = os.path.join(Settings.profile_location, username + '.json')
         if len(information['images']) >= Settings.limit_amount:
             with open(file_profile, 'w') as fp:
                 fp.write(json.dumps(information, indent=4))
