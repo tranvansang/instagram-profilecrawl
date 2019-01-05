@@ -14,7 +14,6 @@ from .time_util import sleep
 from .time_util import sleep_actual
 import errno
 
-
 def web_adress_navigator(browser, link):
     """Checks and compares current URL of web page and the URL to be navigated and if it is different, it does navigate"""
 

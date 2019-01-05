@@ -60,25 +60,16 @@ def extract_post_info(browser):
 
     post = browser.find_element_by_tag_name('article')
     imgs = post.find_elements_by_tag_name('img')
-    if len(imgs) >= 2:
-        img = imgs[1].get_attribute('src')
-    else:
-        img = imgs[0].get_attribute('src')
-    likes = 0
-    caption = 0
-    location_url = 'https://instagram.com'
-    location_id = None
-    lat = 0
-    lng = 0
-    location_name = ''
-    tags = ''
-    comments = []
-    date = None
-    user_commented_list = []
-    user_comments = []
-    mentions = []
-    return caption, location_url, location_name, location_id, lat, lng, img, tags, int(likes), int(
-        len(comments) - 1), date, user_commented_list, user_comments, mentions
+
+    for element in imgs:
+        className = element.get_attribute('class')
+        if ( className == 'FFVAD'):
+            img = element.get_attribute('src')
+            srcset = element.get_attribute('srcset')
+            width = element.get_attribute('sizes')
+            height = width
+    
+    return img, srcset, width, height
 
 
 def extract_posts(browser, num_of_posts_to_do, is_tag = False):
@@ -86,6 +77,8 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
     links = []
     links2 = []
     preview_imgs = {}
+
+    errMsg = ''
 
     # list links contains 30 links from the current view, as that is the maximum Instagram is showing at one time
     # list links2 contains all the links collected so far
@@ -157,8 +150,6 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
     post_infos = []
 
     counter = 1
-    # into user_commented_total_list I will add all username links who commented on any post of this user
-    user_commented_total_list = []
 
     for link in links2:
 
@@ -168,37 +159,27 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
         print("\nScrapping link: ", link)
         web_adress_navigator(browser, link)
         try:
-            caption, location_url, location_name, location_id, lat, lng, img, tags, likes, comments, date, user_commented_list, user_comments, mentions = extract_post_info(
-                browser)
-
-            location = {
-                'location_url': location_url,
-                'location_name': location_name,
-                'location_id': location_id,
-                'latitude': lat,
-                'longitude': lng,
-            }
+            img, srcset, width, height = extract_post_info(browser)
 
             post_infos.append({
-                'caption': caption,
-                'location': location,
-                'img': img,
-                'preview_img': preview_imgs.get(link, None),
-                'date': date,
-                'tags': tags,
-                'likes': likes,
+                'src': img,
+                'srcset': srcset,
+                'width': width,
+                'height': height,
                 'url': link,
-                'comments': {
-                    'count': comments,
-                    'list': user_comments
-                },
-                'mentions': mentions
             })
-            user_commented_total_list = user_commented_total_list + user_commented_list
+            msg = ''
+            if (img == '' or img == None): msg = msg + "img is null,"
+            if (srcset == '' or img == None): msg = msg + "srcset is null,"
+            if (width == '' or img == None): msg = msg + "width is null,"
+            if (msg != ''): errMsg = errMsg + '   - Link = ' + link + " : " + msg + '\n'
+            print('msg = ' + msg)
         except NoSuchElementException as err:
             print('- Could not get information from post: ' + link)
             print(err)
-    return post_infos, user_commented_total_list
+            errMsg = errMsg + '- Could not get information from post: ' + link
+
+    return post_infos, errMsg
 
 
 def extract_information(browser, username, limit_amount):
@@ -206,59 +187,23 @@ def extract_information(browser, username, limit_amount):
 
     user_link = "https://www.instagram.com/{}/".format(username)
     web_adress_navigator(browser, user_link)
-    num_of_posts_to_do = 999999
-    try:
-        alias_name, bio, prof_img, num_of_posts, followers, following, bio_url \
-            = get_user_info(browser)
-        if limit_amount < 1:
-            limit_amount = 999999
-        num_of_posts_to_do = min(limit_amount, num_of_posts)
-    except:
-        print("\nError: Couldn't get user profile.\nTerminating")
-        quit()
     prev_divs = browser.find_elements_by_class_name('_70iju')
 
     post_infos = []
     user_commented_total_list = []
+    num_of_posts_to_do = 12
     if Settings.scrap_posts_infos is True:
         try:
-            post_infos, user_commented_total_list = extract_posts(browser, num_of_posts_to_do)
+            post_infos, errMsg = extract_posts(browser, num_of_posts_to_do)
         except:
             pass
 
     information = {
-        'alias': alias_name,
-        'username': username,
-        'bio': bio,
-        'prof_img': prof_img,
-        'num_of_posts': num_of_posts,
-        'followers': followers,
-        'following': following,
-        'bio_url': bio_url,
         'scrapped': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'posts': post_infos
+        'images': post_infos
     }
 
-    print("\nUser ", username, " has ", len(user_commented_total_list), " comments.")
-
-    # sorts the list by frequencies, so users who comment the most are at the top
-    import collections
-    from operator import itemgetter, attrgetter
-    counter = collections.Counter(user_commented_total_list)
-    com = sorted(counter.most_common(), key=itemgetter(1, 0), reverse=True)
-    com = map(lambda x: [x[0]] * x[1], com)
-    user_commented_total_list = [item for sublist in com for item in sublist]
-
-    # remove duplicates preserving order (that's why not using set())
-    user_commented_list = []
-    last = ''
-    for i in range(len(user_commented_total_list)):
-        if username.lower() != user_commented_total_list[i]:
-            if last != user_commented_total_list[i]:
-                user_commented_list.append(user_commented_total_list[i])
-            last = user_commented_total_list[i]
-
-    return information, user_commented_list
+    return information, errMsg
 
 
 def extract_tag_information(browser, tag, limit_amount):
@@ -271,7 +216,7 @@ def extract_tag_information(browser, tag, limit_amount):
     user_commented_total_list = []
     if Settings.scrap_posts_infos is True:
         try:
-            post_infos, user_commented_total_list = extract_posts(browser, num_of_posts_to_do, True)
+            post_infos, errMsg = extract_posts(browser, num_of_posts_to_do, True)
         except:
             pass
 
