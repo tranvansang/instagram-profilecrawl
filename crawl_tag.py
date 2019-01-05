@@ -31,9 +31,23 @@ try:
 
   for tag in tags:
     print('Extracting information from #' + tag)
-    information, user_commented_list = extract_tag_information(browser, tag, Settings.limit_amount)
+    information, errMsg = extract_tag_information(browser, tag, Settings.limit_amount)
     Datasaver.save_profile_json(tag,information)
+    
+    if (errMsg != '' and errMsg != None):
+      #Send msg to slack
+      webhook_url = 'https://hooks.slack.com/services/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'
+      slack_data = {'text': '#InstagramCrawl:\n' + errMsg}
 
+      response = requests.post(
+          webhook_url, data=json.dumps(slack_data),
+          headers={'Content-Type': 'application/json'}
+      )
+      if response.status_code != 200:
+          raise ValueError(
+              'Request to slack returned an error %s, the response is:\n%s'
+              % (response.status_code, response.text)
+          )
     print ("Number of users who commented on his/her profile is ", len(user_commented_list),"\n")
 
 except KeyboardInterrupt:
