@@ -88,7 +88,9 @@ def extract_post_info(browser):
         
         className = element.get_attribute('class')
         if ( className == 'C4VMK'):
-            caption = HTMLParser().unescape(element.text)
+            spanElement = element.find_element_by_tag_name('span')
+            caption = HTMLParser().unescape(spanElement.text)
+            break
     
     return caption, alt, img, srcset, width, height, sizes
 
