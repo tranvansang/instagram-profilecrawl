@@ -139,6 +139,11 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
                         img = link_elem.find_element_by_tag_name('img')
                     except NoSuchElementException:
                         continue
+                    try:
+                        span = link_elem.find_elements_by_tag_name("span")
+                        continue
+                    except NoSuchElementException:
+                        pass
                     src = img.get_attribute('src')
                     preview_imgs[href] = src
             for link in links:
