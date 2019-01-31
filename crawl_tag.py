@@ -48,7 +48,7 @@ try:
     information, errMsg = extract_tag_information(browser, tag, Settings.limit_amount)
     Datasaver.save_profile_json(tag,information)
     
-    if (errMsg != '' and errMsg != None):
+    if (errMsg != None and errMsg != ''):
       #Send msg to slack
       slackSendMsg(errMsg)
       
@@ -56,7 +56,7 @@ try:
 except KeyboardInterrupt:
   print('Aborted...')
 except Exception as e:
-  slackSendMsg(str(e))
+  #slackSendMsg(str(e))
   print(str(e))
   pass
 finally:

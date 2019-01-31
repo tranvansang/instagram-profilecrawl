@@ -13,6 +13,7 @@ from PIL import Image
 import urllib.request
 import ssl
 import io
+from html.parser import HTMLParser
 
 def getImageSize(url):
     context = ssl._create_unverified_context()
@@ -75,12 +76,21 @@ def extract_post_info(browser):
     for element in imgs:
         className = element.get_attribute('class')
         if ( className == 'FFVAD'):
+            alt = element.get_attribute('alt')
             img = element.get_attribute('src')
             srcset = element.get_attribute('srcset')
             width, height = getImageSize(img)
             sizes = element.get_attribute('sizes')
     
-    return img, srcset, width, height, sizes
+    caption = ''
+    divs = post.find_elements_by_tag_name('div')
+    for element in divs:
+        
+        className = element.get_attribute('class')
+        if ( className == 'C4VMK'):
+            caption = HTMLParser().unescape(element.text)
+    
+    return caption, alt, img, srcset, width, height, sizes
 
 
 def extract_posts(browser, num_of_posts_to_do, is_tag = False):
@@ -169,17 +179,21 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
         print("\nScrapping link: ", link)
         web_adress_navigator(browser, link)
         try:
-            img, srcset, width, height, sizes = extract_post_info(browser)
+            caption, alt, img, srcset, width, height, sizes = extract_post_info(browser)
 
             post_infos.append({
+                'caption': caption,
                 'src': img,
                 'srcset': srcset,
                 'width': width,
                 'height': height,
                 'url': link,
+                'alt': alt,
                 'sizes': sizes
             })
             msg = ''
+            if (caption == '' or caption == None): msg = msg + "caption is null,"
+            if (alt == '' or alt == None): msg = msg + "alt is null,"
             if (img == '' or img == None): msg = msg + "img is null,"
             if (srcset == '' or img == None): msg = msg + "srcset is null,"
             if (width == '' or img == None): msg = msg + "width is null,"
@@ -225,11 +239,9 @@ def extract_tag_information(browser, tag, limit_amount):
     web_adress_navigator(browser, tag_link)
     num_of_posts_to_do = 12
     post_infos = []
+    errMsg = ''
     if Settings.scrap_posts_infos is True:
-        try:
-            post_infos, errMsg = extract_posts(browser, num_of_posts_to_do, True)
-        except:
-            pass
+        post_infos, errMsg = extract_posts(browser, num_of_posts_to_do, True)
     
     information = {
         'scrapped': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
