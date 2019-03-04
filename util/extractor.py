@@ -79,8 +79,9 @@ def extract_post_info(browser):
             alt = element.get_attribute('alt')
             img = element.get_attribute('src')
             srcset = element.get_attribute('srcset')
-            width, height = getImageSize(img)
+            #width, height = getImageSize(img)
             sizes = element.get_attribute('sizes')
+            break
     
     caption = ''
     divs = post.find_elements_by_tag_name('div')
@@ -92,14 +93,17 @@ def extract_post_info(browser):
             caption = HTMLParser().unescape(spanElement.text)
             break
     
-    return caption, alt, img, srcset, width, height, sizes
+    return caption, alt, img, srcset, sizes
 
 
 def extract_posts(browser, num_of_posts_to_do, is_tag = False):
     """Get all posts from user"""
     links = []
     links2 = []
-    preview_imgs = {}
+    srcsetPreview_imgs = {}
+    sizesPreview_img = {}
+    altPreview_img = {}
+    srcPreview_img = {}
 
     errMsg = ''
 
@@ -133,7 +137,7 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
                 prev_divs = browser.find_elements_by_tag_name('main')
             links_elems = [div.find_elements_by_tag_name('a') for div in prev_divs]
             links = sum([[link_elem.get_attribute('href')
-                          for link_elem in elems] for elems in links_elems], [])
+                for link_elem in elems] for elems in links_elems], [])
             for elems in links_elems:
                 for link_elem in elems:
                     href = link_elem.get_attribute('href')
@@ -141,13 +145,10 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
                         img = link_elem.find_element_by_tag_name('img')
                     except NoSuchElementException:
                         continue
-                    try:
-                        span = link_elem.find_elements_by_tag_name("span")
-                        continue
-                    except NoSuchElementException:
-                        pass
-                    src = img.get_attribute('src')
-                    preview_imgs[href] = src
+                    srcsetPreview_imgs[href] = img.get_attribute('srcset')
+                    sizesPreview_img[href] = img.get_attribute('sizes')
+                    altPreview_img[href] = img.get_attribute('alt')
+                    srcPreview_img[href] = img.get_attribute('src')
             for link in links:
                 if "/p/" in link:
                     if (len(links2) < num_of_posts_to_do):
@@ -179,31 +180,32 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
     counter = 1
 
     for link in links2:
-
         print("\n", counter, "/", len(links2))
+        
         counter = counter + 1
 
         print("\nScrapping link: ", link)
         web_adress_navigator(browser, link)
         try:
-            caption, alt, img, srcset, width, height, sizes = extract_post_info(browser)
+            caption, alt, img, srcset, sizes = extract_post_info(browser)
 
             post_infos.append({
+                'url': link,
                 'caption': caption,
                 'src': img,
                 'srcset': srcset,
-                'width': width,
-                'height': height,
-                'url': link,
+                'sizes': sizes,
                 'alt': alt,
-                'sizes': sizes
+                'srcSmall': srcPreview_img[link],
+                'srcsetSmall': srcsetPreview_imgs[link],
+                'sizesSmall': sizesPreview_img[link],
+                'altSmall': altPreview_img[link],                
             })
             msg = ''
             if (caption == '' or caption == None): msg = msg + "caption is null,"
             if (alt == '' or alt == None): msg = msg + "alt is null,"
             if (img == '' or img == None): msg = msg + "img is null,"
             if (srcset == '' or img == None): msg = msg + "srcset is null,"
-            if (width == '' or img == None): msg = msg + "width is null,"
             if (msg != ''): errMsg = errMsg + '   - Link = ' + link + " : " + msg + '\n'
             print('msg = ' + msg)
         except NoSuchElementException as err:

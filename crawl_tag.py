@@ -56,7 +56,7 @@ try:
 except KeyboardInterrupt:
   print('Aborted...')
 except Exception as e:
-  #slackSendMsg(str(e))
+  slackSendMsg(str(e))
   print(str(e))
   pass
 finally:
