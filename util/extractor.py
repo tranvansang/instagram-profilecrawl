@@ -151,7 +151,7 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
                     srcPreview_img[href] = img.get_attribute('src')
             for link in links:
                 if "/p/" in link:
-                    if (len(links2) < num_of_posts_to_do):
+                    if (altPreview_img[link] != '' and len(links2) < num_of_posts_to_do):
                         links2.append(link)
             links2 = list(set(links2)) #remove duplicate elems
             print("Scrolling profile ", len(links2), "/", num_of_posts_to_scroll)
