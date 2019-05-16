@@ -202,7 +202,7 @@ def extract_posts(browser, num_of_posts_to_do, is_tag = False):
                 'altSmall': altPreview_img[link],                
             })
             msg = ''
-            if (caption == '' or caption == None): msg = msg + "caption is null,"
+            #if (caption == '' or caption == None): msg = msg + "caption is null,"
             if (alt == '' or alt == None): msg = msg + "alt is null,"
             if (img == '' or img == None): msg = msg + "img is null,"
             if (srcset == '' or img == None): msg = msg + "srcset is null,"
