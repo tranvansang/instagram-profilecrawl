@@ -3,5 +3,5 @@ urllib3==1.23
 PySocks==1.6.8
 requests==2.19.1
 pyOpenSSL==16.2.0
-cryptography==2.3.1
+cryptography==3.2
 Pillow==5.4.0
